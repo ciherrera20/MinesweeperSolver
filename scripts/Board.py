@@ -4,10 +4,11 @@ import random
 class Board:
     HIDDEN = "?"
     MINE = "X"
+    FLAGGED = "F"
 
-    def __init__(self, cols, rows, numMines, seed = None):
-        self.cols = cols
+    def __init__(self, rows, cols, numMines, seed = None):
         self.rows = rows
+        self.cols = cols
         self.numMines = min(numMines, rows * cols)
 
         # 2D array of 1s or 0s. 1s correspond to mines, 0s correspond to open spaces
@@ -18,6 +19,9 @@ class Board:
 
         # 2D array of 1s or 0s. 1s correspond to a cell that has been clicked and 0s correspond to a cell that is hidden
         self.clicked = np.zeros((rows, cols))
+
+        # 2D array of 1s or 0s. 1s correspond to a cell that has been flagged and 0s correspond to a cell that is not flagged
+        self.flagged = np.zeros((rows, cols))
 
         # Seed the random generator, then add mines
         if seed is not None:
@@ -80,6 +84,12 @@ class Board:
         """
         return self.clicked[row, col] == 1
 
+    def isFlagged(self, row, col):
+        """
+        Whether or not a cell is flagged
+        """
+        return self.flagged[row, col] == 1
+
     def getMines(self, row, col):
         """
         Return the number of surrounding mines in the given cell
@@ -92,6 +102,12 @@ class Board:
         """
         self.clicked[row, col] = 1
 
+    def flagCell(self, row, col):
+        """
+        Set a cell to have been flagged
+        """
+        self.flagged[row, col] = 1
+
     def isGameOver(self):
         """
         Checks whether the game is over by checking if any mines have been clicked
@@ -102,19 +118,24 @@ class Board:
                     return True
         return False
 
+    def getSurroundingMines(self, row, col):
+        return self.mines[row, col]
+
     def __repr__(self):
         """
         Returns a string representation
         """
         s = ''
         nums = (self.mines + 1) * self.clicked
-        for y_pos in range(0, self.cols):
-            for x_pos in range(0, self.rows):
-                num = nums[y_pos, x_pos]
-                if num == 0:
+        for row in range(0, self.rows):
+            for col in range(0, self.cols):
+                num = nums[row, col]
+                if self.isFlagged(row, col):
+                    s += str(Board.FLAGGED) + ' '
+                elif num == 0:
                     s += str(Board.HIDDEN) + ' '
                 else:
-                    if self.isMine(y_pos, x_pos):
+                    if self.isMine(row, col):
                         s += str(Board.MINE) + ' '
                     else:
                         s += str(int(num - 1)) + ' '
